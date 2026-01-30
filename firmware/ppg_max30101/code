@@ -1,1 +1,81 @@
+/*
+  MAX30101 PPG Sensor Interface
+  --------------------------------
+  Microcontroller: nRF52832
+  Sensor: MAX30101 (using modified MAX30105 library)
+  Interface: I2C
+  Output: Raw Red, IR, Green LED values via Serial Monitor
 
+  Purpose:
+  - Verify I2C connectivity
+  - Initialize MAX30101 sensor
+  - Read raw PPG signals for heart rate & SpO2 processing
+
+  Note:
+  The MAX30101 was interfaced using the MAX30105 Arduino library
+  with modified configuration settings to support sensor detection.
+*/
+
+#include <Wire.h>
+#include <MAX30105.h>
+
+MAX30105 particleSensor;
+
+// Scan I2C bus for connected devices
+void scanI2C() {
+  Serial.println("Scanning I2C addresses...");
+  for (byte address = 1; address < 127; address++) {
+    Wire.beginTransmission(address);
+    if (Wire.endTransmission() == 0) {
+      Serial.print("Found I2C device at address 0x");
+      Serial.println(address, HEX);
+    }
+    delay(5);
+  }
+  Serial.println("I2C scan complete.");
+}
+
+void setup() {
+  Serial.begin(9600);
+  while (!Serial);
+
+  Wire.begin();
+  scanI2C();
+
+  // Initialize MAX30101 sensor
+  if (!particleSensor.begin(Wire, I2C_SPEED_STANDARD, 0x55)) {
+    Serial.println("MAX30101 not detected. Check wiring.");
+    while (1);
+  }
+
+  Serial.println("MAX30101 initialized successfully.");
+
+  // Default sensor configuration
+  particleSensor.setup();
+
+  // Configure LED pulse amplitudes
+  particleSensor.setPulseAmplitudeRed(0x1F);
+  particleSensor.setPulseAmplitudeIR(0x1F);
+  particleSensor.setPulseAmplitudeGreen(0x1F);
+
+  delay(5000); // Allow sensor to stabilize
+}
+
+void loop() {
+  if (particleSensor.available()) {
+    long redValue = particleSensor.getRed();
+    long irValue = particleSensor.getIR();
+    long greenValue = particleSensor.getGreen();
+
+    Serial.print("Red: ");
+    Serial.println(redValue);
+    Serial.print("IR: ");
+    Serial.println(irValue);
+    Serial.print("Green: ");
+    Serial.println(greenValue);
+  } else {
+    Serial.println("No PPG data available");
+  }
+
+  delay(1000);
+}
