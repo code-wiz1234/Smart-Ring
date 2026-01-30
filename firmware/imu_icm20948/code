@@ -1,1 +1,86 @@
+/*
+  ICM-20948 IMU Interface
+  ----------------------
+  Microcontroller: nRF52832
+  Sensor: ICM-20948 (9-axis IMU)
+  Interface: I2C
 
+  Outputs:
+  - Accelerometer (X, Y, Z) in g
+  - Gyroscope (X, Y, Z) in dps
+  - Magnetometer (X, Y, Z) in µT
+  - On-chip temperature in °C
+
+  Purpose:
+  - Validate IMU communication
+  - Collect motion data for activity tracking
+  - Assist in motion artifact detection for PPG signals
+*/
+
+#include <Wire.h>
+#include <ICM_20948.h>
+
+ICM_20948_I2C myIMU;
+
+void setup() {
+  Serial.begin(9600);
+  while (!Serial) {
+    delay(10);
+  }
+
+  Wire.begin();
+
+  // Initialize IMU
+  if (myIMU.begin(Wire, ICM_20948_I2C_ADDR_AD0) != ICM_20948_Stat_Ok) {
+    Serial.println("ICM-20948 IMU initialization failed!");
+    while (1);
+  }
+
+  Serial.println("ICM-20948 IMU initialized successfully.");
+}
+
+void loop() {
+  // Read accelerometer, gyroscope, magnetometer, temperature
+  myIMU.getAGMT();
+
+  float imuTemp = myIMU.temp();
+
+  float accX = myIMU.accX();
+  float accY = myIMU.accY();
+  float accZ = myIMU.accZ();
+
+  float gyrX = myIMU.gyrX();
+  float gyrY = myIMU.gyrY();
+  float gyrZ = myIMU.gyrZ();
+
+  float magX = myIMU.magX();
+  float magY = myIMU.magY();
+  float magZ = myIMU.magZ();
+
+  // Print IMU data
+  Serial.print("Temp (C): ");
+  Serial.print(imuTemp, 2);
+
+  Serial.print(" | Accel (g) X:");
+  Serial.print(accX, 2);
+  Serial.print(" Y:");
+  Serial.print(accY, 2);
+  Serial.print(" Z:");
+  Serial.print(accZ, 2);
+
+  Serial.print(" | Gyro (dps) X:");
+  Serial.print(gyrX, 2);
+  Serial.print(" Y:");
+  Serial.print(gyrY, 2);
+  Serial.print(" Z:");
+  Serial.print(gyrZ, 2);
+
+  Serial.print(" | Mag (uT) X:");
+  Serial.print(magX, 2);
+  Serial.print(" Y:");
+  Serial.print(magY, 2);
+  Serial.print(" Z:");
+  Serial.println(magZ, 2);
+
+  delay(2000);
+}
