@@ -1,1 +1,37 @@
+/*
+  DS18B20 Temperature Sensor Interface
+  -----------------------------------
+  Microcontroller: nRF52832
+  Sensor: DS18B20
+  Interface: OneWire
 
+  Output:
+  - Temperature in degrees Celsius (°C)
+
+  Purpose:
+  - Measure skin or ambient temperature
+  - Support fever detection and baseline health monitoring
+*/
+
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+#define ONE_WIRE_BUS A0  // DS18B20 data pin connected to nRF52 A0
+
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
+
+void setup() {
+  Serial.begin(9600);
+  sensors.begin();  // Initialize DS18B20
+}
+
+void loop() {
+  sensors.requestTemperatures();           // Request temperature reading
+  float tempC = sensors.getTempCByIndex(0);
+
+  Serial.print("Temperature (C): ");
+  Serial.println(tempC);
+
+  delay(2000);
+}
